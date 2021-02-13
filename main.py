@@ -1,27 +1,26 @@
 import tensorflow as tf
-import numpy as np
 import os
 
 from selflow_model import SelFlowModel
 from config.extract_config import config_dict
 
-# manually select one or several free gpu 
+# manually select one or several free gp
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1, 2, 3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # autonatically select one free gpu
-#os.system('nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp')
-#os.environ['CUDA_VISIBLE_DEVICES']=str(np.argmax([int(x.split()[2]) for x in open('tmp','r').readlines()]))
-#os.system('rm tmp')
+# os.system('nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp')
+# os.environ['CUDA_VISIBLE_DEVICES']=str(np.argmax([int(x.split()[2]) for x in open('tmp','r').readlines()]))
+# os.system('rm tmp')
 
 
 def main(_):
     config = config_dict('./config/config.ini')
     run_config = config['run']
-    dataset_config = config['dataset']    
+    dataset_config = config['dataset']
     self_supervision_config = config['self_supervision']
     model = SelFlowModel(batch_size=run_config['batch_size'],
-                         iter_steps=run_config['iter_steps'], 
+                         iter_steps=run_config['iter_steps'],
                          initial_learning_rate=run_config['initial_learning_rate'],
                          decay_steps=run_config['decay_steps'],
                          decay_rate=run_config['decay_rate'],
@@ -48,7 +47,7 @@ def main(_):
                          dataset_config=dataset_config,
                          self_supervision_config=self_supervision_config
                          )
-    
+
     if run_config['mode'] == 'test':
         model.test(restore_model=config['test']['restore_model'],
                    save_dir=config['test']['save_dir'],
@@ -56,5 +55,6 @@ def main(_):
     else:
         raise ValueError('Invalid mode. Mode should be one of {test}')
 
+
 if __name__ == '__main__':
-    tf.app.run() 
+    tf.compat.v1.app.run()
