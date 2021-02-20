@@ -13,6 +13,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 # os.environ['CUDA_VISIBLE_DEVICES']=str(np.argmax([int(x.split()[2]) for x in open('tmp','r').readlines()]))
 # os.system('rm tmp')
 
+tf.compat.v1.disable_eager_execution()
 
 def main(_):
     config = config_dict('./config/config.ini')

@@ -39,7 +39,8 @@ def tf_warp(img, flow, H, W):
     x = tf.cast(x, tf.float32)
     y = tf.cast(y, tf.float32)
     grid = tf.concat([x,y],axis = -1)
-#    print grid.shape
+    grid = [x,y]
+    #print( grid.shape)
     flows = grid+flow
     #print(flows.shape)
     max_y = tf.cast(H - 1, tf.int32)

@@ -9,7 +9,7 @@ import cv2
 
 from six.moves import xrange
 from scipy import misc, io
-from tensorflow.contrib import slim
+import tf_slim as slim
 
 import matplotlib.pyplot as plt
 from network import pyramid_processing
@@ -82,19 +82,23 @@ class SelFlowModel(object):
 
     def test(self, restore_model, save_dir, is_normalize_img=True):
         dataset = BasicDataset(data_list_file=self.dataset_config['data_list_file'], img_dir=self.dataset_config['img_dir'], is_normalize_img=is_normalize_img)
-        save_name_list = dataset.data_list[:, -1]
+        print(dataset.data_list)
+        save_name_list = dataset.data_list[:,-1]
         iterator = dataset.create_one_shot_iterator(dataset.data_list, num_parallel_calls=self.num_input_threads)
         batch_img0, batch_img1, batch_img2 = iterator.get_next()
         img_shape = tf.shape(batch_img0)
         h = img_shape[1]
         w = img_shape[2]
+        print(h)
+        print(w)
 
         new_h = tf.where(tf.equal(tf.math.mod(h, 64), 0), h, (tf.dtypes.cast(tf.floor(h / 64) + 1, tf.int32)) * 64)
         new_w = tf.where(tf.equal(tf.math.mod(w, 64), 0), w, (tf.dtypes.cast(tf.floor(w / 64) + 1, tf.int32)) * 64)
 
-        batch_img0 = tf.image.resize_images(batch_img0, [new_h, new_w], method=1, align_corners=True)
-        batch_img1 = tf.image.resize_images(batch_img1, [new_h, new_w], method=1, align_corners=True)
-        batch_img2 = tf.image.resize_images(batch_img2, [new_h, new_w], method=1, align_corners=True)
+        print(new_h)
+        batch_img0 = tf.image.resize(batch_img0, [new_h, new_w], method='bilinear', preserve_aspect_ratio=True)
+        batch_img1 = tf.image.resize(batch_img1, [new_h, new_w], method='bilinear', preserve_aspect_ratio=True)
+        batch_img2 = tf.image.resize(batch_img2, [new_h, new_w], method='bilinear', preserve_aspect_ratio=True)
 
         flow_fw, flow_bw = pyramid_processing(batch_img0, batch_img1, batch_img2, train=False, trainable=False, is_scale=True)
         flow_fw['full_res'] = flow_resize(flow_fw['full_res'], [h, w], method=1)
@@ -103,12 +107,15 @@ class SelFlowModel(object):
         flow_fw_color = flow_to_color(flow_fw['full_res'], mask=None, max_flow=256)
         flow_bw_color = flow_to_color(flow_bw['full_res'], mask=None, max_flow=256)
 
+
         restore_vars = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES)
         saver = tf.compat.v1.train.Saver(var_list=restore_vars)
+
         sess = tf.compat.v1.Session()
-        sess.run(tf.compat.v1.global_variables_initializer())
-        sess.run(iterator.initializer)
-        saver.restore(sess, restore_model)
+        with tf.compat.v1.get_default_graph().as_default():
+            sess.run(tf.compat.v1.global_variables_initializer())
+            sess.run(iterator.initializer)
+            saver.restore(sess, restore_model)
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
         for i in range(dataset.data_num):

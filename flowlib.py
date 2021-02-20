@@ -15,7 +15,7 @@ def read_flo(filename):
             data = np.fromfile(f, np.float32, count=int(2*w*h))
             # Reshape data into 3D array (columns, rows, bands)
             data2D = np.resize(data, (h[0], w[0],2))
-            return data2D    
+            return data2D
 
 def write_flo(filename, flow):
     """
@@ -118,13 +118,13 @@ def flow_to_color(flow, mask=None, max_flow=None):
     mask = tf.ones([num_batch, height, width, 1]) if mask is None else mask
     flow_u, flow_v = tf.unstack(flow, axis=3)
     if max_flow is not None:
-        max_flow = tf.maximum(tf.to_float(max_flow), 1.)
+        max_flow = tf.maximum(tf.cast(max_flow, tf.float32), 1.)
     else:
         max_flow = tf.reduce_max(tf.abs(flow * mask))
     mag = tf.sqrt(tf.reduce_sum(tf.square(flow), 3))
     angle = tf.atan2(flow_v, flow_u)
 
-    im_h = tf.mod(angle / (2 * np.pi) + 1.0, 1.0)
+    im_h = tf.math.floormod(angle / (2 * np.pi) + 1.0, 1.0)
     im_s = tf.clip_by_value(mag * n / max_flow, 0, 1)
     im_v = tf.clip_by_value(n - im_s, 0, 1)
     im_hsv = tf.stack([im_h, im_s, im_v], 3)

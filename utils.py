@@ -6,7 +6,7 @@ from warp import tf_warp
 
 def mvn(img):
     # minus mean color and divided by standard variance
-    mean, var = tf.nn.moments(img, axes=[0, 1], keep_dims=True)
+    mean, var = tf.nn.moments(img, axes=[0, 1], keepdims=True)
     img = (img - mean) / tf.sqrt(var + 1e-12)
     return img
 

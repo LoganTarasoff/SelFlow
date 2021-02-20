@@ -51,7 +51,7 @@ def random_channel_swap(img_list):
                                        [1, 0, 2],
                                        [1, 2, 0],
                                        [2, 0, 1],
-                                       [2, 1, 0]])    
+                                       [2, 1, 0]])
     rand_i = tf.random_uniform([], minval=0, maxval=6, dtype=tf.int32)
     perm = channel_permutation[rand_i]
     for i, img in enumerate(img_list):
@@ -61,14 +61,14 @@ def random_channel_swap(img_list):
         img_list[i] = tf.stack([channel_1, channel_2, channel_3], axis=-1)
     return img_list
 
-def flow_resize(flow, out_size, is_scale=True, method=0):
+def flow_resize(flow, out_size, is_scale=True, method='bilinear'):
     '''
-        method: 0 mean bilinear, 1 means nearest
+        method: bilinear,nearest
     '''
     flow_size = tf.dtypes.cast(tf.shape(flow)[-3:-1], float)
-    flow = tf.image.resize_images(flow, out_size, method=method, align_corners=True)
+    flow = tf.image.resize(flow, out_size, method='bilinear', preserve_aspect_ratio=True)
     if is_scale:
-        scale = tf.to_float(out_size) / flow_size
+        scale = tf.cast(out_size, tf.float32) / flow_size
         scale = tf.stack([scale[1], scale[0]])
         flow = tf.multiply(flow, scale)
     return flow
